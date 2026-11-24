@@ -1,13 +1,16 @@
-# Briga de Bonecos 3D
+# Briga de Bonecos 3D (online)
 
-## Como publicar no Render (Web Service)
-1. Crie um repositorio no GitHub e envie TODOS os arquivos desta pasta (index.html fica na raiz).
-2. No Render: New + > Web Service > escolha o repositorio.
+## Como funciona o online
+- Play > Jogar online > **⚡ Sala rápida**: você entra no lobby de uma sala aberta (junto do dono) ou, se não houver, cria uma e vira o dono 👑.
+- O dono toca em **Iniciar partida** (mínimo 2 jogadores; começa sozinho se encher 4/4). O mapa é sorteado pelo servidor.
+- Dentro da partida todos jogam juntos: socos, segurar/arremessar, empurrões, tiros e K.O. valem entre jogadores.
+- Menu (☰) > **Sair da partida** volta ao menu.
+
+## Publicar no Render (Web Service)
+1. Envie TODOS os arquivos desta pasta para um repositório no GitHub.
+2. Render: New + > Web Service > escolha o repositório.
 3. Runtime: Node | Build Command: `npm install` | Start Command: `npm start`
-4. Create Web Service. Pronto: o link .onrender.com abre o jogo.
+4. Pronto: o link .onrender.com abre o jogo (usa WebSocket, já suportado pelo Render).
 
-(O arquivo render.yaml ja traz essas configuracoes: New + > Blueprint tambem funciona.)
-
-## Virar app / APK
-Abra o link no Chrome do celular > menu > "Instalar app". Para gerar APK, cole o link em pwabuilder.com.
-O jogo usa three.js e cannon.js de um CDN; apos a 1a abertura com internet ficam guardados para uso offline.
+## Rodar local
+`npm install && npm start` e abra http://localhost:3000 em duas abas.
