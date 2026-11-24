@@ -17,9 +17,12 @@ button.on{background:#ff9f1c;color:#000}
 #go{width:100%;margin-top:14px;background:#2ec27e;font-size:17px}
 small{display:block;margin-top:8px;opacity:.65;font-size:11px}
 #tc{display:none}
-#joy{position:fixed;left:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.14)}
-#kn{position:absolute;left:40px;top:40px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.55)}
-.ab{position:fixed;right:18px;width:74px;height:74px;border-radius:50%;padding:0;background:rgba(255,255,255,.22);font-size:13px}
+#jz{position:fixed;left:0;bottom:0;width:50vw;height:68vh;touch-action:none}
+#joy{position:fixed;left:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);width:120px;height:120px;box-sizing:border-box;border-radius:50%;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.28);pointer-events:none;transition:background .12s}
+#joy.act{background:rgba(255,255,255,.26)}
+#kn{position:absolute;left:38px;top:38px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.6)}
+.ab{position:fixed;right:18px;width:74px;height:74px;border-radius:50%;padding:0;background:rgba(255,255,255,.22);font-size:13px;line-height:1.15}
+.ab .hn{display:block;font-size:9px;font-weight:600;opacity:.85;margin-top:2px}
 .pop{position:fixed;transform:translate(-50%,-50%);font:900 30px system-ui;color:#ffe14d;-webkit-text-stroke:2px #000;pointer-events:none;animation:up .7s forwards}
 @keyframes up{to{transform:translate(-50%,-170%) scale(1.5);opacity:0}}
 </style></head><body>
@@ -28,12 +31,13 @@ small{display:block;margin-top:8px;opacity:.65;font-size:11px}
 <p>Cor do boneco</p><div class="row"><input type="color" id="col" value="#ff5a5a"><span class="row" id="sw"></span></div>
 <p>Acessório</p><div class="row" id="ac"></div>
 <p>Mapa</p><div class="row" id="mp"><button data-m="terraco" class="on">🏙️ Terraço</button><button data-m="prisao">🚔 Prisão (com policial)</button></div>
+<p>Controles na tela</p><div class="row"><button id="tg">📱 Joystick e botões</button></div>
 <button id="go">Jogar!</button>
-<small>Teclado: WASD/setas mover · Espaço pular · J socar · K segurar (soltar = arremessar). No celular use os botões na tela. No terraço, quem cai da laje leva K.O.!</small></div>
-<div id="tc"><div id="joy"><div id="kn"></div></div>
+<small>Teclado: WASD/setas mover · Espaço pular · J socar · K segurar (soltar = arremessar) · L empurrar. No celular: joystick na metade esquerda da tela (toque em qualquer ponto) e botões à direita. Segurar: 1 toque segura, outro toque solta/arremessa, 2 toques rápidos viram empurrão. No terraço, quem cai da laje leva K.O.!</small></div>
+<div id="tc"><div id="jz"></div><div id="joy"><div id="kn"></div></div>
 <button class="ab" id="bj" style="bottom:calc(env(safe-area-inset-bottom,0px) + 120px)">Pular</button>
 <button class="ab" id="bp" style="bottom:calc(env(safe-area-inset-bottom,0px) + 40px);right:100px">Socar</button>
-<button class="ab" id="bg" style="bottom:calc(env(safe-area-inset-bottom,0px) + 40px)">Segurar</button></div>
+<button class="ab" id="bg" style="bottom:calc(env(safe-area-inset-bottom,0px) + 40px)"><span id="bgt">Segurar</span><span class="hn">2× = empurrar</span></button></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 <script>
@@ -64,7 +68,7 @@ mk({name:'Verdinho',col:0x4caf50,x:-5,z:0,bot:1,acc:1});mk({name:'Amarelão',col
 if(n=='prisao')mk({name:'Policial',col:0x1d3a8a,x:0,z:-5,bot:1,cop:1,acc:7});}
 const P=[['hips',.5,.35,.3,3,0,1,0],['chest',.6,.6,.35,4,0,1.5,0],['head',.54,.54,.54,1.5,0,2.1,0,1],['aL',.18,.65,.18,.8,-.38,1.45,0],['aR',.18,.65,.18,.8,.38,1.45,0],['lL',.22,.8,.22,1.2,-.15,.425,0],['lR',.22,.8,.22,1.2,.15,.425,0]];
 function mk(o){let id=0;while(chars.some(k=>k.id==id))id++;const bit=1<<(id+1),mm=o.cop?1.6:1;
-const c={id,name:o.name,bot:o.bot,cop:o.cop,mm,hp:100,kos:0,stun:0,pc:0,jc:0,t:0,rt:0,dead:0,gr:null,gt:null,last:null,sx:o.x,sz:o.z,B:{},M:{},cons:[]};
+const c={id,name:o.name,bot:o.bot,cop:o.cop,mm,hp:100,kos:0,stun:0,pc:0,jc:0,sc:0,t:0,rt:0,dead:0,gr:null,gt:null,last:null,sx:o.x,sz:o.z,B:{},M:{},cons:[]};
 P.forEach(p=>{const b=new CANNON.Body({mass:p[4]*mm,linearDamping:.25,angularDamping:.5});b.addShape(p[8]?new CANNON.Sphere(.27):new CANNON.Box(new CANNON.Vec3(p[1]/2,p[2]/2,p[3]/2)));b.position.set(o.x+p[5],p[6],o.z+p[7]);b.collisionFilterGroup=bit;b.collisionFilterMask=~bit;W.addBody(b);c.B[p[0]]=b;
 const m=new THREE.Mesh(p[8]?new THREE.SphereGeometry(.27,18,14):new THREE.CylinderGeometry(.5,.5,p[2],14),mt(0xffffff));if(!p[8])m.scale.set(p[1],1,p[3]);m.castShadow=true;S.add(m);c.M[p[0]]=m});
 const B=c.B,cone=(a,b,pa,pb,ax,ang)=>{const k=new CANNON.ConeTwistConstraint(B[a],B[b],{pivotA:new CANNON.Vec3(...pa),pivotB:new CANNON.Vec3(...pb),axisA:new CANNON.Vec3(0,ax,0),axisB:new CANNON.Vec3(0,ax,0),angle:ang,twistAngle:ang});k.collideConnected=false;W.addConstraint(k);c.cons.push(k)},
@@ -99,6 +103,13 @@ function grab(c){if(c.gr||c.dead>0)return;let b=null,bd=1.7;chars.forEach(o=>{if
 c.gr=['aL','aR'].map((n,i)=>{const k=new CANNON.PointToPointConstraint(c.B[n],new CANNON.Vec3(0,-.3,0),b.B.chest,new CANNON.Vec3(i?.2:-.2,.2,0));W.addConstraint(k);return k});c.gt=b}
 function release(c,thr){if(!c.gr)return;c.gr.forEach(k=>W.removeConstraint(k));c.gr=null;const o=c.gt;c.gt=null;if(thr&&o&&o.dead<=0){const f=fwd(c);o.last=c;o.stun=2;[o.B.chest,o.B.hips,o.B.head].forEach(b=>b.velocity.set(f.x*11,9,f.z*11));pop(o,'BOINK!')}}
 function jump(c){if(c.jc>0||c.dead>0||c.B.hips.position.y>1.35)return;c.jc=.5;for(const n in c.B)c.B[n].velocity.y=9.5}
+function push(c){if(c.sc>0||c.dead>0)return;c.sc=.6;const f=fwd(c),B=c.B,cp=B.chest.position;let t=c.gt&&c.gt.dead<=0?c.gt:null,bd=2.1;
+if(c.gr)release(c);
+B.aL.velocity.set(f.x*10,4,f.z*10);B.aR.velocity.set(f.x*10,4,f.z*10);B.chest.velocity.x+=f.x*3;B.chest.velocity.z+=f.z*3;
+if(!t)chars.forEach(o=>{if(o==c||o.dead>0)return;const dx=o.B.chest.position.x-cp.x,dz=o.B.chest.position.z-cp.z,L=Math.hypot(dx,dz)||1;if(L<bd&&(dx*f.x+dz*f.z)/L>.15){bd=L;t=o}});
+if(!t)return;
+const dx=t.B.chest.position.x-cp.x,dz=t.B.chest.position.z-cp.z,L=Math.hypot(dx,dz)||1,k=c.cop?20:15;
+t.last=c;t.stun=1.2;for(const n in t.B){const v=t.B[n].velocity;v.x+=dx/L*k;v.z+=dz/L*k;v.y+=2}pop(t,'EMPURRÃO!')}
 function ai(c,dt){c.t-=dt;let b=null,bd=1e9;chars.forEach(o=>{if(o==c||o.dead>0)return;const d=dist(c,o);if(d<bd){bd=d;b=o}});c.inp={x:0,z:0};if(!b)return;
 const p=c.B.hips.position,q=b.B.hips.position,dx=q.x-p.x,dz=q.z-p.z,L=Math.hypot(dx,dz)||1;
 if(c.gr){c.rt-=dt;const l=Math.hypot(p.x,p.z)||1;c.inp={x:p.x/l,z:p.z/l};if(c.rt<=0)release(c,1)}
@@ -106,7 +117,7 @@ else{c.inp={x:dx/L,z:dz/L};if(L<1.6&&c.t<=0){c.t=.6+Math.random()*.7;if(Math.ran
 const m=Math.max(Math.abs(p.x),Math.abs(p.z));if(mapName=='terraco'&&!c.gr&&m>7.6)c.inp={x:-p.x/m,z:-p.z/m}}
 const K={},JV={x:0,z:0};
 function pin(){let x=(K.d||K.ArrowRight?1:0)-(K.a||K.ArrowLeft?1:0)+JV.x,z=(K.s||K.ArrowDown?1:0)-(K.w||K.ArrowUp?1:0)+JV.z;const l=Math.hypot(x,z);return l>1?{x:x/l,z:z/l}:{x,z}}
-function step(c,dt){const B=c.B,h=B.hips,ch=B.chest;c.stun=Math.max(0,c.stun-dt);c.pc-=dt;c.jc-=dt;
+function step(c,dt){const B=c.B,h=B.hips,ch=B.chest;c.stun=Math.max(0,c.stun-dt);c.pc-=dt;c.jc-=dt;c.sc-=dt;
 if(c.dead>0){c.dead-=dt;if(c.dead<=0)respawn(c)}else if(h.position.y<-6)ko(c);
 const dead=c.dead>0,st=(dead||c.stun>0)?.1:1,mm=c.mm;let i={x:0,z:0};
 if(!dead){if(c.bot){ai(c,dt);i=c.inp}else i=pin()}
@@ -126,18 +137,28 @@ chars.forEach(c=>{for(const n in c.B){c.M[n].position.copy(c.B[n].position);c.M[
 const p=me.B.hips.position,k=innerWidth<innerHeight?1.35:1;cx+=(p.x*.6-cx)*.08;cz+=(p.z*.6-cz)*.08;C.position.set(cx,11*k,cz+13*k);C.lookAt(cx,0,cz-1);R.render(S,C)}
 loadMap('terraco');requestAnimationFrame(loop);
 setInterval(()=>{$('hud').textContent=chars.map(c=>c.name+'  ❤'+Math.max(0,c.hp|0)+'  K.O. '+c.kos).join('\n')},250);
-addEventListener('keydown',e=>{const k=e.key.length==1?e.key.toLowerCase():e.key;K[k]=1;if(e.repeat)return;if(k==' ')jump(me);if(k=='j')punch(me);if(k=='k')grab(me)});
+addEventListener('keydown',e=>{const k=e.key.length==1?e.key.toLowerCase():e.key;K[k]=1;if(e.repeat)return;if(k==' ')jump(me);if(k=='j')punch(me);if(k=='k')grab(me);if(k=='l')push(me)});
 addEventListener('keyup',e=>{const k=e.key.length==1?e.key.toLowerCase():e.key;K[k]=0;if(k=='k')release(me,1)});
-if('ontouchstart' in window||navigator.maxTouchPoints>0)$('tc').style.display='block';
+let tOn='ontouchstart' in window||navigator.maxTouchPoints>0;
 const bind=(id,d,u)=>{const b=$(id);b.onpointerdown=e=>{e.preventDefault();d()};b.onpointerup=b.onpointercancel=()=>u&&u()};
-bind('bj',()=>jump(me));bind('bp',()=>punch(me));bind('bg',()=>grab(me),()=>release(me,1));
-const jy=$('joy'),kn=$('kn');let jd=0;
-function mv(e){const r=jy.getBoundingClientRect();let x=(e.clientX-r.left-60)/50,z=(e.clientY-r.top-60)/50;const l=Math.hypot(x,z);if(l>1){x/=l;z/=l}JV.x=x;JV.z=z;kn.style.transform='translate('+x*40+'px,'+z*40+'px)'}
-jy.onpointerdown=e=>{jd=1;jy.setPointerCapture(e.pointerId);mv(e)};jy.onpointermove=e=>{if(jd)mv(e)};jy.onpointerup=jy.onpointercancel=()=>{jd=0;JV.x=JV.z=0;kn.style.transform=''};
+bind('bj',()=>jump(me));bind('bp',()=>punch(me));let gl=0,gtm=0,gs=0;
+function gTap(){const t=performance.now();
+if(t-gl<300){gl=0;clearTimeout(gtm);push(me);return}
+gl=t;if(me.gr)gtm=setTimeout(()=>{if(me.gr)release(me,1)},300);else grab(me)}
+bind('bg',gTap);
+setInterval(()=>{const h=me.gr?1:0;if(h!==gs){gs=h;$('bgt').textContent=h?'Soltar':'Segurar';$('bg').classList.toggle('on',!!h)}},120);
+const jy=$('joy'),kn=$('kn'),jz=$('jz');let jid=null,jx=0,jyy=0;
+function mv(e){let x=(e.clientX-jx)/50,z=(e.clientY-jyy)/50;const l=Math.hypot(x,z);if(l>1){x/=l;z/=l}if(l<.12){x=0;z=0}JV.x=x;JV.z=z;kn.style.transform='translate('+x*38+'px,'+z*38+'px)'}
+function jend(){jid=null;JV.x=JV.z=0;kn.style.transform='';jy.style.left=jy.style.top=jy.style.bottom='';jy.classList.remove('act')}
+jz.onpointerdown=e=>{if(jid!==null)return;jid=e.pointerId;try{jz.setPointerCapture(e.pointerId)}catch(_){}jx=Math.min(innerWidth-62,Math.max(62,e.clientX));jyy=Math.min(innerHeight-62,Math.max(62,e.clientY));jy.style.left=jx-60+'px';jy.style.top=jyy-60+'px';jy.style.bottom='auto';jy.classList.add('act');mv(e)};
+jz.onpointermove=e=>{if(e.pointerId===jid)mv(e)};
+jz.onpointerup=jz.onpointercancel=e=>{if(e.pointerId===jid)jend()};
 ['#ff5a5a','#4aa8ff','#2ec27e','#ffd23f','#b05cff','#ff8fd0','#ffffff','#222222'].forEach(c=>{const b=document.createElement('button');b.className='sw';b.style.background=c;b.onclick=()=>{$('col').value=c;paint(me,c)};$('sw').appendChild(b)});
 $('col').oninput=e=>paint(me,e.target.value);
 ['Nenhum','Cartola','Cone','Óculos','Coroa','Chifres','Bigode'].forEach((n,i)=>{const b=document.createElement('button');b.textContent=n;if(!i)b.className='on';b.onclick=()=>{setAcc(me,i);[...$('ac').children].forEach(x=>x.className='');b.className='on'};$('ac').appendChild(b)});
 $('mp').querySelectorAll('button').forEach(b=>b.onclick=()=>{loadMap(b.dataset.m);$('mp').querySelectorAll('button').forEach(x=>x.className='');b.className='on'});
-$('go').onclick=()=>$('menu').style.display='none';$('mb').onclick=()=>$('menu').style.display='block';
+function ui(){const open=$('menu').style.display!='none',on=tOn&&!open;if(!on&&jid!==null)jend();$('tc').style.display=on?'block':'none';$('tg').textContent='📱 Joystick e botões: '+(tOn?'ligados':'desligados');$('tg').className=tOn?'on':''}
+$('tg').onclick=()=>{tOn=!tOn;ui()};
+$('go').onclick=()=>{$('menu').style.display='none';ui()};$('mb').onclick=()=>{$('menu').style.display='block';ui()};ui();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
