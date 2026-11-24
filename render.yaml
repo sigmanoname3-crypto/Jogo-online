@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: briga-de-bonecos-3d
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
